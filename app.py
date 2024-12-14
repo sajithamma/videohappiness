@@ -1,12 +1,11 @@
 import os
 import tempfile
 import subprocess
-import cv2  
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 from deepface import DeepFace
-
 
 try:
     import streamlit as st
@@ -61,7 +60,6 @@ def create_transparent_overlay_with_lines(overlay_path, width, height):
     img.save(overlay_path)
 
 
-
 # Set up Streamlit app layout
 st.title("Happiness Graph Video Generator")
 st.sidebar.header("Upload Video")
@@ -79,7 +77,7 @@ if uploaded_video:
     if generate_button:
         st.info("Analyzing video frames for happiness...")
 
-        # Step 1: Extract frames and simulate happiness detection
+        # Step 1: Extract frames and analyze happiness
         cap = cv2.VideoCapture(input_video_path)
 
         frame_scores = []
@@ -89,6 +87,7 @@ if uploaded_video:
 
         progress_bar = st.progress(0)
 
+        # Initialize OpenCV face detection
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
         for i in range(frame_count):
@@ -98,33 +97,37 @@ if uploaded_video:
                 frame_scores.append(0)  # Assign a default happiness score for skipped frames
                 continue
 
-            # Convert frame to RGB (required for DeepFace)
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-            # Detect emotions
-            try:
-                analysis = DeepFace.analyze(rgb_frame, actions=["emotion"], enforce_detection=False)
+            # Detect faces in the frame
+            faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-                # Handle different output formats
-                if isinstance(analysis, list):
-                    # If multiple faces detected, take the first one or average
-                    happiness_score = analysis[0]["emotion"]["happy"] if analysis else 0
-                elif isinstance(analysis, dict):
-                    # Single face detected
-                    happiness_score = analysis["emotion"]["happy"]
-                else:
-                    # Unexpected format
-                    print(f"Unexpected analysis result for frame {i}: {analysis}")
-                    happiness_score = 0
+            happiness_score = 0
+            face_count = len(faces)
 
-            except Exception as e:
-                print(f"Error analyzing frame {i}: {e}")
-                happiness_score = 0  # Default to 0 if analysis fails
+            for (x, y, w, h) in faces:
+                # Crop face region
+                face_region = rgb_frame[y:y+h, x:x+w]
 
-            print(happiness_score)
+                # Analyze emotions in the face region
+                try:
+                    analysis = DeepFace.analyze(face_region, actions=["emotion"], enforce_detection=False)
 
+                    # Accumulate happiness score
+                    if isinstance(analysis, list):
+                        happiness_score += analysis[0]["emotion"]["happy"] if analysis else 0
+                    elif isinstance(analysis, dict):
+                        happiness_score += analysis["emotion"]["happy"]
+
+                except Exception as e:
+                    print(f"Error analyzing face in frame {i}: {e}")
+
+            # Average happiness score across all faces
+            happiness_score = happiness_score / face_count if face_count > 0 else 0
             frame_scores.append(happiness_score)
 
+            print(f"Frame {i} - Happiness Score: {happiness_score}")
             progress_bar.progress((i + 1) / frame_count)
 
         cap.release()
