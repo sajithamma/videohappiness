@@ -81,11 +81,15 @@ if uploaded_video:
             plt.plot(timestamps[:i + 1], frame_scores[:i + 1], color="orange", linewidth=2)
             plt.ylim(0, 100)
             plt.xticks([])  # Remove x-axis ticks
-            plt.yticks(range(0, 110, 10), [f"{y}%" for y in range(0, 110, 10)])  # Percentage labels
+            yticks = range(0, 110, 10)
+            plt.yticks(yticks, [f"{y}%" for y in yticks])
             plt.grid(axis="y", linestyle="--", alpha=0.7)
-            plt.gca().set_facecolor("none")
-            plt.gca().spines["top"].set_visible(False)
-            plt.gca().spines["right"].set_visible(False)
+            plt.gca().set_facecolor((0, 0, 0, 0.5))  # Semi-transparent black background
+
+            # Highlight specific percentage lines
+            for y in [25, 50, 75]:
+                plt.axhline(y=y, color="green", linestyle="--", linewidth=1.5, alpha=0.7)
+            
             graph_frame_path = os.path.join(graph_frame_dir, f"frame_{i:04d}.png")
             plt.savefig(graph_frame_path, transparent=True, bbox_inches="tight", pad_inches=0)
             plt.close()
