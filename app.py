@@ -48,7 +48,7 @@ def create_transparent_overlay_with_lines(overlay_path, width, height):
 
         # Draw grid lines (different color for 25%, 50%, 75%)
         line_color = (255, 255, 255, 100)  # Default white with transparency
-        if percent in [25, 50, 75]:
+        if percent in [20, 50, 80]:
             line_color = (255, 255, 0, 150)  # Yellow with more opacity
         draw.line([(0, y_pos), (width, y_pos)], fill=line_color, width=2)
 
@@ -166,6 +166,6 @@ if uploaded_video:
                         mime="video/mp4"
                     )
                 os.remove(static_overlay_path)
-                
+
             else:
                 st.error(f"Error overlaying graph on video: {result_overlay.stderr}")
