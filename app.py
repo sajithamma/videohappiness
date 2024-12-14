@@ -1,10 +1,12 @@
 import os
 import tempfile
 import subprocess
-import cv2
+import cv2  
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
+from deepface import DeepFace
+
 
 try:
     import streamlit as st
@@ -92,15 +94,35 @@ if uploaded_video:
         for i in range(frame_count):
             ret, frame = cap.read()
             if not ret:
-                break
+                print(f"Skipping frame {i} due to read error.")
+                frame_scores.append(0)  # Assign a default happiness score for skipped frames
+                continue
 
-            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+            # Convert frame to RGB (required for DeepFace)
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-            for (x, y, w, h) in faces:
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)  # Blue bounding box
+            # Detect emotions
+            try:
+                analysis = DeepFace.analyze(rgb_frame, actions=["emotion"], enforce_detection=False)
 
-            happiness_score = np.random.uniform(50, 100)
+                # Handle different output formats
+                if isinstance(analysis, list):
+                    # If multiple faces detected, take the first one or average
+                    happiness_score = analysis[0]["emotion"]["happy"] if analysis else 0
+                elif isinstance(analysis, dict):
+                    # Single face detected
+                    happiness_score = analysis["emotion"]["happy"]
+                else:
+                    # Unexpected format
+                    print(f"Unexpected analysis result for frame {i}: {analysis}")
+                    happiness_score = 0
+
+            except Exception as e:
+                print(f"Error analyzing frame {i}: {e}")
+                happiness_score = 0  # Default to 0 if analysis fails
+
+            print(happiness_score)
+
             frame_scores.append(happiness_score)
 
             progress_bar.progress((i + 1) / frame_count)
