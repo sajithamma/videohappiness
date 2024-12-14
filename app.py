@@ -78,20 +78,20 @@ if uploaded_video:
         # Ensure frame dimensions are divisible by 2
         for i, score in enumerate(frame_scores):
             plt.figure(figsize=(10, 2))
-            plt.plot(timestamps[:i + 1], frame_scores[:i + 1], color="orange", linewidth=2)
+            plt.plot(timestamps[:i + 1], frame_scores[:i + 1], color="orange", linewidth=1)  # Thinner graph line
             plt.ylim(0, 100)
             plt.xticks([])  # Remove x-axis ticks
             yticks = range(0, 110, 10)
-            plt.yticks(yticks, [f"{y}%" for y in yticks])
-            plt.grid(axis="y", linestyle="--", alpha=0.7)
-            plt.gca().set_facecolor((0, 0, 0, 0.5))  # Semi-transparent black background
+            plt.yticks(yticks, [f"{y}%" for y in yticks], fontsize=8, color="white")  # Add white percentage labels
+            plt.grid(axis="y", linestyle="--", alpha=0.7, linewidth=0.5, color="white")  # Thinner percentage lines in white
+            plt.gca().set_facecolor("black")  # Black background for the graph
 
             # Highlight specific percentage lines
             for y in [25, 50, 75]:
-                plt.axhline(y=y, color="green", linestyle="--", linewidth=1.5, alpha=0.7)
+                plt.axhline(y=y, color="green", linestyle="--", linewidth=0.8, alpha=0.7)  # Highlighted lines thinner
             
             graph_frame_path = os.path.join(graph_frame_dir, f"frame_{i:04d}.png")
-            plt.savefig(graph_frame_path, transparent=True, bbox_inches="tight", pad_inches=0)
+            plt.savefig(graph_frame_path, bbox_inches="tight", pad_inches=0)  # No transparency for consistency
             plt.close()
 
         # Generate video from graph frames
