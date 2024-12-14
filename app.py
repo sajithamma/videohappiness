@@ -88,8 +88,12 @@ if uploaded_video:
 
             # Highlight specific percentage lines
             for y in [25, 50, 75]:
-                plt.axhline(y=y, color="green", linestyle="--", linewidth=0.8, alpha=0.7)  # Highlighted lines thinner
-            
+                plt.axhline(y=y, color="yellow", linestyle="--", linewidth=0.8, alpha=0.7)  # Highlighted lines thinner
+
+            # Add percentage text at specific highlighted lines
+            for y in [25, 50, 75]:
+                plt.text(0, y, f"{y}%", fontsize=20, color="white", verticalalignment='center', horizontalalignment='center')
+
             graph_frame_path = os.path.join(graph_frame_dir, f"frame_{i:04d}.png")
             plt.savefig(graph_frame_path, bbox_inches="tight", pad_inches=0)  # No transparency for consistency
             plt.close()
