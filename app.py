@@ -40,14 +40,28 @@ if uploaded_video:
         # Streamlit progress bar
         progress_bar = st.progress(0)
 
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+
         for i in range(frame_count):
             ret, frame = cap.read()
             if not ret:
                 break
 
+            # Convert frame to grayscale for face detection
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+            # Draw bounding boxes around faces
+            for (x, y, w, h) in faces:
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)  # Blue bounding box
+
             # Simulate happiness score calculation (random or fixed values)
             happiness_score = np.random.uniform(50, 100)  # Generate random happiness score between 50 and 100
             frame_scores.append(happiness_score)
+
+            # Save the processed frame
+            processed_frame_path = os.path.join(temp_dir, f"processed_frame_{i:04d}.png")
+            cv2.imwrite(processed_frame_path, frame)
 
             # Update progress
             progress_bar.progress((i + 1) / frame_count)
@@ -55,7 +69,7 @@ if uploaded_video:
         cap.release()
 
         # Step 2: Generate dynamic graph video
-        st.info("Generating dynamic happiness graph with transparent background...")
+        st.info("Generating dynamic happiness graph with percentage bars...")
 
         # Create graph for each frame dynamically
         graph_frame_dir = os.path.join(temp_dir, "graph_frames")
@@ -64,11 +78,14 @@ if uploaded_video:
         # Ensure frame dimensions are divisible by 2
         for i, score in enumerate(frame_scores):
             plt.figure(figsize=(10, 2))
-            plt.plot(timestamps[:i + 1], frame_scores[:i + 1], color="orange")
-            plt.fill_between(timestamps[:i + 1], frame_scores[:i + 1], 0, alpha=0.2, color="orange")
+            plt.plot(timestamps[:i + 1], frame_scores[:i + 1], color="orange", linewidth=2)
             plt.ylim(0, 100)
-            plt.axis("off")
-            plt.gcf().set_size_inches(8, 2)  # Adjust aspect ratio
+            plt.xticks([])  # Remove x-axis ticks
+            plt.yticks(range(0, 110, 10), [f"{y}%" for y in range(0, 110, 10)])  # Percentage labels
+            plt.grid(axis="y", linestyle="--", alpha=0.7)
+            plt.gca().set_facecolor("none")
+            plt.gca().spines["top"].set_visible(False)
+            plt.gca().spines["right"].set_visible(False)
             graph_frame_path = os.path.join(graph_frame_dir, f"frame_{i:04d}.png")
             plt.savefig(graph_frame_path, transparent=True, bbox_inches="tight", pad_inches=0)
             plt.close()
