@@ -30,7 +30,8 @@ def make_dimensions_even(image_path):
 
 def create_transparent_overlay_with_lines(overlay_path, width, height):
     """
-    Creates a transparent PNG overlay with percentage text and horizontal grid lines.
+    Creates a transparent PNG overlay with percentage text and horizontal grid lines,
+    ensuring 100% is included at the top.
     """
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))  # Transparent background
     draw = ImageDraw.Draw(img)
@@ -42,7 +43,7 @@ def create_transparent_overlay_with_lines(overlay_path, width, height):
         font = ImageFont.load_default()
 
     # Draw percentage text and horizontal lines
-    for i, percent in enumerate(range(0, 110, 10)):
+    for i, percent in enumerate(range(0, 101, 10)):  # Include 100%
         y_pos = int(height - (i * height / 10))
 
         # Draw grid lines (different color for 25%, 50%, 75%)
@@ -56,6 +57,7 @@ def create_transparent_overlay_with_lines(overlay_path, width, height):
 
     # Save the image
     img.save(overlay_path)
+
 
 
 # Set up Streamlit app layout
@@ -163,5 +165,7 @@ if uploaded_video:
                         file_name="happiness_video.mp4",
                         mime="video/mp4"
                     )
+                os.remove(static_overlay_path)
+                
             else:
                 st.error(f"Error overlaying graph on video: {result_overlay.stderr}")
