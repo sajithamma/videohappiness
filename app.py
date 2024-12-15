@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 from deepface import DeepFace
 
+SAVE_SNAP = False
+
 try:
     import streamlit as st
 except ModuleNotFoundError:
@@ -72,6 +74,9 @@ if uploaded_video:
         f.write(uploaded_video.read())
     st.sidebar.success("Video uploaded successfully!")
 
+    snaps_dir = os.path.join(os.getcwd(), "snaps")
+    os.makedirs(snaps_dir, exist_ok=True)
+
     generate_button = st.sidebar.button("Generate Happiness Video with Overlay")
 
     if generate_button:
@@ -122,6 +127,11 @@ if uploaded_video:
 
                 except Exception as e:
                     print(f"Error analyzing face in frame {i}: {e}")
+
+                if SAVE_SNAP:
+                    face_filename = os.path.join(snaps_dir, f"frame_{i}_happy_{happiness_score:.2f}.png")
+                    face_image = Image.fromarray(face_region)
+                    face_image.save(face_filename)
 
             # Average happiness score across all faces
             happiness_score = happiness_score / face_count if face_count > 0 else 0
