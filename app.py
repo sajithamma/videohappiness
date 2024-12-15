@@ -8,7 +8,6 @@ from PIL import Image, ImageDraw, ImageFont
 from deepface import DeepFace
 
 SAVE_SNAP = False
-second_happiness = {}
 
 
 try:
@@ -84,6 +83,8 @@ if uploaded_video:
     if generate_button:
         st.info("Analyzing video frames for happiness...")
 
+        half_second_happiness = {}
+
         # Step 1: Extract frames and analyze happiness
         cap = cv2.VideoCapture(input_video_path)
 
@@ -139,13 +140,13 @@ if uploaded_video:
             happiness_score = happiness_score / face_count if face_count > 0 else 0
             frame_scores.append(happiness_score)
 
-            current_second = int(i / fps)
+            current_half_second = int((i / fps) * 2)  # Multiply by 2 to divide into half-second intervals
 
-            # Update the maximum happiness score for the current second
-            if current_second not in second_happiness:
-                second_happiness[current_second] = happiness_score
+            # Update the maximum happiness score for the current half-second interval
+            if current_half_second not in half_second_happiness:
+                half_second_happiness[current_half_second] = happiness_score
             else:
-                second_happiness[current_second] = max(second_happiness[current_second], happiness_score)
+                half_second_happiness[current_half_second] = max(half_second_happiness[current_half_second], happiness_score)
 
            
             print(f"Frame {i} - Happiness Score: {happiness_score}")
@@ -153,11 +154,12 @@ if uploaded_video:
 
         cap.release()
 
-        if second_happiness:
-            average_happiness = sum(second_happiness.values()) / len(second_happiness)
+        if half_second_happiness:
+            average_happiness = sum(half_second_happiness.values()) / len(half_second_happiness)
             print(f"Average Happiness Score Across Video: {average_happiness:.2f}")
         else:
             print("No happiness data available to calculate average.")
+
 
         st.info("Generating dynamic happiness graph with percentage bars...")
 
