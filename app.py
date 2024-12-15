@@ -8,6 +8,8 @@ from PIL import Image, ImageDraw, ImageFont
 from deepface import DeepFace
 
 SAVE_SNAP = False
+second_happiness = {}
+
 
 try:
     import streamlit as st
@@ -137,10 +139,25 @@ if uploaded_video:
             happiness_score = happiness_score / face_count if face_count > 0 else 0
             frame_scores.append(happiness_score)
 
+            current_second = int(i / fps)
+
+            # Update the maximum happiness score for the current second
+            if current_second not in second_happiness:
+                second_happiness[current_second] = happiness_score
+            else:
+                second_happiness[current_second] = max(second_happiness[current_second], happiness_score)
+
+           
             print(f"Frame {i} - Happiness Score: {happiness_score}")
             progress_bar.progress((i + 1) / frame_count)
 
         cap.release()
+
+        if second_happiness:
+            average_happiness = sum(second_happiness.values()) / len(second_happiness)
+            print(f"Average Happiness Score Across Video: {average_happiness:.2f}")
+        else:
+            print("No happiness data available to calculate average.")
 
         st.info("Generating dynamic happiness graph with percentage bars...")
 
